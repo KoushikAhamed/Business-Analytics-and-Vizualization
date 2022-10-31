@@ -1,0 +1,25 @@
+let CreateDateTable = (StartDate as date, EndDate as date, optional Culture as nullable text) as table =>
+    let
+        DayCount = Duration.Days(Duration.From(EndDate - StartDate)),
+        Source = List.Dates(StartDate,DayCount+1,#duration(1,0,0,0)),
+        TableFromList = Table.FromList(Source, Splitter.SplitByNothing()),
+        ChangedType = Table.TransformColumnTypes(TableFromList,{{"Column1", type date}}),
+        RenamedColumns = Table.RenameColumns(ChangedType,{{"Column1", "Date"}}),
+        InsertYear = Table.AddColumn(RenamedColumns, "Year", each Date.Year([Date])),
+        InsertQuarter = Table.AddColumn(InsertYear, "Quarter No", each Date.QuarterOfYear([Date])),
+        InsertMonth = Table.AddColumn(InsertQuarter, "Month No", each Date.Month([Date])),
+        InsertDay = Table.AddColumn(InsertMonth, "Day", each Date.Day([Date])),
+        InsertDayInt = Table.AddColumn(InsertDay, "DateInt", each [Year] * 10000 + [Month No] * 100 + [Day]),
+        InsertMonthName = Table.AddColumn(InsertDayInt, "Month Full Name", each Date.ToText([Date], "MMMM", Culture), type text),
+        InsertShortMonthName = Table.AddColumn(InsertMonthName, "MonthName", each Text.Start(Date.ToText([Date], "MMMM", Culture),3), type text),
+        InsertCalendarMonth = Table.AddColumn(InsertShortMonthName, "Month Mapping", each (try(Text.Range([Month Full Name],0,3)) otherwise [Month Full Name]) & " " & Number.ToText([Year])),
+        InsertCalendarQtr = Table.AddColumn(InsertCalendarMonth, "Quarter Name", each "Q" & Number.ToText([Quarter No]) & " " & Number.ToText([Year])),
+        InsertDayWeek = Table.AddColumn(InsertCalendarQtr, "Weekday No", each Date.DayOfWeek([Date])+1),
+        InsertDayName = Table.AddColumn(InsertDayWeek, "Weekday Name", each Date.ToText([Date], "dddd", Culture), type text),
+        Formatting = Table.TransformColumnTypes(InsertDayName,{{"Date", type date}, {"Year", Int64.Type}, {"Quarter No", Int64.Type}, {"Month No", Int64.Type}, {"Day", Int64.Type}, {"DateInt", Int64.Type}, {"Month Full Name", type text}, {"MonthName", type text}, {"Month Mapping", type date}, {"Quarter Name", type text}, {"Weekday No", Int64.Type}, {"Weekday Name", type text}}),
+        InsertCalendarMonthEnd=Table.AddColumn(Formatting, "Month End", each Date.AddDays(Date.AddMonths([Month Mapping],1),-1)),
+        ChangeType = Table.TransformColumnTypes(InsertCalendarMonthEnd,{{"Month End", type date}})
+    in
+        ChangeType
+in
+    CreateDateTable
