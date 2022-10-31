@@ -1,0 +1,19 @@
+Here in the code of sum fuction is used to compare for quick value measure.
+
+Margin Cost =  [FactRevenue]-[CostFact]
+Cost Fact = [Products.Price in ruble]*[SalesFact Pcs]
+Plan Revenue = [SalesPlan Pcs]*[Products.Price]
+FactRevenue = [SalesFact Pcs]*[Products.Price]
+Product Price = [Price]*[Cost in percents]/100
+
+ADD quick Measure : Right click on sales table 
+
+FactRevenue % difference from PlanRevenue = 
+VAR __BASELINE_VALUE = SUM('Sales'[PlanRevenue])
+VAR __VALUE_TO_COMPARE = SUM('Sales'[FactRevenue])
+RETURN
+	IF(
+		NOT ISBLANK(__VALUE_TO_COMPARE),
+		DIVIDE(__VALUE_TO_COMPARE - __BASELINE_VALUE, __BASELINE_VALUE)
+	)
+
