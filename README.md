@@ -1,2 +1,2 @@
-# Business-Analytics-and-Vizualization
+# Data-Analytics-and-Vizualization
 Business Analysis and Visualizations on Big Data with Power BI
